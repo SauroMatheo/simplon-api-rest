@@ -7,24 +7,30 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
+use Symfony\Component\Serializer\Annotation\Groups; 
+
 #[ORM\Entity(repositoryClass: EquipesRepository::class)]
 class Equipes
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["equipe", "equipesMinimum", "joueur"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["equipe", "equipesMinimum"])]
     private ?string $nom = null;
 
     #[ORM\Column]
+    #[Groups(["equipe"])]
     private ?int $score = null;
 
     /**
      * @var Collection<int, Joueurs>
      */
     #[ORM\OneToMany(targetEntity: Joueurs::class, mappedBy: 'equipe')]
+    #[Groups(["equipe"])]
     private Collection $joueurs;
 
     public function __construct()

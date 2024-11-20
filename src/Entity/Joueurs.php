@@ -5,20 +5,26 @@ namespace App\Entity;
 use App\Repository\JoueursRepository;
 use Doctrine\ORM\Mapping as ORM;
 
+use Symfony\Component\Serializer\Annotation\Groups; 
+
 #[ORM\Entity(repositoryClass: JoueursRepository::class)]
 class Joueurs
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["equipe", "joueur"])]
     private ?int $id = null;
 
+    #[Groups(["joueur"])]
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
+    #[Groups(["joueur"])]
     #[ORM\Column(length: 255)]
     private ?string $prenom = null;
 
+    #[Groups(["joueur"])]
     #[ORM\ManyToOne(inversedBy: 'joueurs')]
     private ?Equipes $equipe = null;
 
