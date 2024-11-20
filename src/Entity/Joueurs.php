@@ -13,18 +13,18 @@ class Joueurs
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["equipe", "joueur"])]
+    #[Groups(["equipe", "joueur", "joueursMinimum"])]
     private ?int $id = null;
 
-    #[Groups(["joueur"])]
+    #[Groups(["joueur", "joueursMinimum"])]
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
-    #[Groups(["joueur"])]
+    #[Groups(["joueur", "joueursMinimum"])]
     #[ORM\Column(length: 255)]
     private ?string $prenom = null;
 
-    #[Groups(["joueur"])]
+    #[Groups(["joueur", "joueursMinimum"])]
     #[ORM\ManyToOne(inversedBy: 'joueurs')]
     private ?Equipes $equipe = null;
 
