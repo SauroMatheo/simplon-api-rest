@@ -16,18 +16,16 @@ class EquipesRepository extends ServiceEntityRepository
         parent::__construct($registry, Equipes::class);
     }
 
-    /**
-     * 
-     */
-    public function findById($id): ?Equipes
-    {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.id = :id')
-            ->setParameter('id', $id)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
+
+    // public function findById($id): ?Equipes
+    // {
+    //     return $this->createQueryBuilder('e')
+    //         ->andWhere('e.id = :id')
+    //         ->setParameter('id', $id)
+    //         ->getQuery()
+    //         ->getOneOrNullResult()
+    //     ;
+    // }
 
     //    /**
     //     * @return Equipes[] Returns an array of Equipes objects

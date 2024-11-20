@@ -16,15 +16,15 @@ class JoueursRepository extends ServiceEntityRepository
         parent::__construct($registry, Joueurs::class);
     }
 
-    public function findById($id): ?Joueurs
-    {
-        return $this->createQueryBuilder('j')
-            ->andWhere('j.id = :id')
-            ->setParameter('id', $id)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
+    // public function findById($id): ?Joueurs
+    // {
+    //     return $this->createQueryBuilder('j')
+    //         ->andWhere('j.id = :id')
+    //         ->setParameter('id', $id)
+    //         ->getQuery()
+    //         ->getOneOrNullResult()
+    //     ;
+    // }
 
     //    /**
     //     * @return Joueurs[] Returns an array of Joueurs objects
