@@ -22,7 +22,7 @@ use App\Entity\Joueurs;
 #[Route('/api/joueurs')]
 class APIJoueursController extends AbstractController
 {
-    #[Route('', name: 'get_joueurs', methods: ['GET'])]
+    #[Route(name: 'get_joueurs', methods: ['GET'])]
     public function getJoueurs(
         Request $request,
         JoueursRepository $joueursRepo,
@@ -49,7 +49,7 @@ class APIJoueursController extends AbstractController
     }
 
 
-    #[Route('', name: 'supprimer_joueur', methods: ['DELETE'])]
+    #[Route(name: 'supprimer_joueur', methods: ['DELETE'])]
     public function supprimer(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -82,7 +82,7 @@ class APIJoueursController extends AbstractController
     }
 
 
-    #[Route('', name: 'ajouter_joueur', methods: ['POST'])]
+    #[Route(name: 'ajouter_joueur', methods: ['POST'])]
     public function ajouter(
         Request $request,
         EquipesRepository $equipeRepo,
@@ -125,7 +125,7 @@ class APIJoueursController extends AbstractController
     }
 
 
-    #[Route('', name: 'update_joueur', methods: ['PUT'])]
+    #[Route(name: 'update_joueur', methods: ['PUT'])]
     public function modifier(
         Request $request,
         EntityManagerInterface $em,

@@ -20,7 +20,7 @@ use App\Repository\EquipesRepository;
 #[Route('/api/equipes')]
 class APIEquipesController extends AbstractController
 {
-    #[Route('', name: 'get_equipes', methods: ['GET'])]
+    #[Route(name: 'get_equipes', methods: ['GET'])]
     public function getEquipes(
         Request $request,
         EquipesRepository $equipesRepository,
@@ -46,19 +46,19 @@ class APIEquipesController extends AbstractController
         return new JsonResponse($equipesJson, Response::HTTP_OK, [], true);
     }
 
-    #[Route('', name: 'delete_equipe', methods: ['DELETE'])]
+    #[Route(name: 'delete_equipe', methods: ['DELETE'])]
     public function delete(
         Request $request,
         EntityManagerInterface $entityManager,
         EquipesRepository $equipesRepository
         ): JsonResponse
     {
-        if (!isset($id)) {
-            return $this->renvoiJson(Response::HTTP_NOT_FOUND, "Équipe introuvable");
+        if (!$request->query->has('id')) {
+            return $this->renvoiJson(Response::HTTP_BAD_REQUEST, "Aucun id spécifié");
         }
 
         try {
-            (int) $id = $request->query->get('id');
+            $id = $request->get('id');
             $equipe = $equipesRepository->find($id);
         } catch (Exception $e) {
             return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
@@ -79,7 +79,7 @@ class APIEquipesController extends AbstractController
     }
 
 
-    #[Route('', name: 'add_equipe', methods: ['POST'])]
+    #[Route(name: 'add_equipe', methods: ['POST'])]
     public function add(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -101,7 +101,7 @@ class APIEquipesController extends AbstractController
     }
 
 
-    #[Route('', name: 'update_equipe', methods: ['PUT'])]
+    #[Route(name: 'update_equipe', methods: ['PUT'])]
     public function modify(
         Request $request,
         EntityManagerInterface $em,
