@@ -20,15 +20,16 @@ use App\Repository\EquipesRepository;
 #[Route('/api/equipes')]
 class APIEquipesController extends AbstractController
 {
-    #[Route('', name: 'get_equipes', methods: ['GET'])]
+    #[Route(name: 'get_equipes', methods: ['GET'])]
     public function getEquipes(
         Request $request,
         EquipesRepository $equipesRepository,
         SerializerInterface $serializer
         ): Response
     {
-        (int) $id = $request->query->get('id');
+        (int) $id = $request->get('id');
 
+        // ID Connu: Récupération
         if (isset($id)) {
             $equipe = $equipesRepository->find($id);
 
@@ -38,27 +39,50 @@ class APIEquipesController extends AbstractController
 
             $equipesJson = $serializer->serialize($equipe, 'json', ['groups' => 'equipe']);
 
-        } else {
-            $equipes = $equipesRepository->findAll();
-            $equipesJson = $serializer->serialize($equipes, 'json', ['groups' => 'equipesMinimum']);
+            return new JsonResponse($equipesJson, Response::HTTP_OK, [], true);
         }
+        
+        $nom = $request->get('nom');
+        (int) $scoreMin = $request->get('scoreMin');
+        (int) $scoreMax = $request->get('scoreMax');
+        (int) $limite = $request->get('limite');
+        (int) $offset = $request->get('offset');
+
+        // Nom/Score en paramètres: Recherche
+        if (isset($nom) || isset($scoreMin) || isset($scoreMax)) {
+            $equipes = $equipesRepository->findSearch($nom, $scoreMin, $scoreMax, $limite, $offset);
+            $equipesJson = $serializer->serialize($equipes, 'json', ['groups' => 'equipesMinimum']);
+
+            return new JsonResponse($equipesJson, Response::HTTP_OK, [], true);
+        }
+
+        // Limite précisée: Limitation des résultats
+        if (isset($limite) || isset($offset)) {
+            $equipes = $equipesRepository->findLimit($limite, $offset);
+            $equipesJson = $serializer->serialize($equipes, 'json', ['groups' => 'equipesMinimum']);
+
+            return new JsonResponse($equipesJson, Response::HTTP_OK, [], true);
+        }
+
+        $equipes = $equipesRepository->findAll(); // TODO: Utiliser ->findLimit, choisir une limite par défaut
+        $equipesJson = $serializer->serialize($equipes, 'json', ['groups' => 'equipesMinimum']);
 
         return new JsonResponse($equipesJson, Response::HTTP_OK, [], true);
     }
 
-    #[Route('', name: 'delete_equipe', methods: ['DELETE'])]
+    #[Route(name: 'delete_equipe', methods: ['DELETE'])]
     public function delete(
         Request $request,
         EntityManagerInterface $entityManager,
         EquipesRepository $equipesRepository
         ): JsonResponse
     {
-        if (!isset($id)) {
-            return $this->renvoiJson(Response::HTTP_NOT_FOUND, "Équipe introuvable");
+        if (!$request->query->has('id')) {
+            return $this->renvoiJson(Response::HTTP_BAD_REQUEST, "Aucun id spécifié");
         }
 
         try {
-            (int) $id = $request->query->get('id');
+            $id = $request->get('id');
             $equipe = $equipesRepository->find($id);
         } catch (Exception $e) {
             return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
@@ -79,7 +103,7 @@ class APIEquipesController extends AbstractController
     }
 
 
-    #[Route('', name: 'add_equipe', methods: ['POST'])]
+    #[Route(name: 'add_equipe', methods: ['POST'])]
     public function add(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -101,7 +125,7 @@ class APIEquipesController extends AbstractController
     }
 
 
-    #[Route('', name: 'update_equipe', methods: ['PUT'])]
+    #[Route(name: 'update_equipe', methods: ['PUT'])]
     public function modify(
         Request $request,
         EntityManagerInterface $em,
