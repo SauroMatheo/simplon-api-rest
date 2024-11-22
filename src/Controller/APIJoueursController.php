@@ -15,25 +15,27 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
 
 use App\Repository\JoueursRepository;
+use App\Repository\EquipesRepository;
+use App\Entity\Joueurs;
 
 
 #[Route('/api/joueurs')]
 class APIJoueursController extends AbstractController
 {
     #[Route('', name: 'get_joueurs', methods: ['GET'])]
-    public function getJoueurs(Request $request, JoueursRepository $joueursRepo, SerializerInterface $serializer): JsonResponse
+    public function getJoueurs(
+        Request $request,
+        JoueursRepository $joueursRepo,
+        SerializerInterface $serializer
+        ): JsonResponse
     {
-        (int) $id = $request->query->get('id');
+        $id = $request->get('id');
 
         if (isset($id)) {
             $joueur = $joueursRepo->find($id);
 
-            if ($joueur === null) { return 
-                new JsonResponse(
-                    json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
-                    Response::HTTP_NOT_FOUND,
-                    [], true
-                );
+            if ($joueur === null) {
+                return $this->renvoiJson(Response::HTTP_NOT_FOUND, "Entité introuvable");
             }
 
             $joueursJson = $serializer->serialize($joueur, 'json', ['groups' => 'joueur']);
@@ -47,85 +49,68 @@ class APIJoueursController extends AbstractController
     }
 
 
-    #[Route('', name: 'delete_joueur', methods: ['DELETE'])]
-    public function delete(Request $request, EntityManagerInterface $entityManager, JoueursRepository $joueursRepo): JsonResponse
+    #[Route('', name: 'supprimer_joueur', methods: ['DELETE'])]
+    public function supprimer(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        JoueursRepository $joueursRepo
+        ): JsonResponse
     {
-        if (!isset($id)) { return
-            new JsonResponse(
-                json_encode(["status" => "Bad Request", "details" => "Aucun id spécifié"]),
-                Response::HTTP_BAD_REQUEST,
-                [], true
-            );
+        if (!$request->query->has('id')) {
+            return $this->renvoiJson(Response::HTTP_BAD_REQUEST, "Aucun id spécifié");
         }
 
         try {
-            (int) $id = $request->query->get('id');
+            $id = $request->get('id');
             $joueur = $joueursRepo->find($id);
         } catch (Exception $e) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => $e
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true
-            );
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
 
-        if ($joueur === null) { return
-            new JsonResponse(
-                json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
-                Response::HTTP_NOT_FOUND,
-                [], true
-            );
+        if ($joueur === null) {
+            return $this->renvoiJson(Response::HTTP_NOT_FOUND, "Entité introuvable");
         }
 
         $entityManager->remove($joueur);
         $entityManager->flush();
 
         if (null !== $joueursRepo->find($id)) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => "L'entité n'a pas pu être supprimée"
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true);
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, "L'entité n'a pas pu être supprimée");
         }
 
-        return new JsonResponse(
-            json([
-                "status" => "No Content",
-                "details" => "L'entité a été supprimée"
-            ]),
-            Response::HTTP_NO_CONTENT,
-            [], true);
+        return $this->renvoiJson(Response::HTTP_NO_CONTENT, "Joueur supprimé avec succès");
     }
 
 
-    #[Route('', name: 'add_joueur', methods: ['POST'])]
-    public function add(
+    #[Route('', name: 'ajouter_joueur', methods: ['POST'])]
+    public function ajouter(
         Request $request,
+        EquipesRepository $equipeRepo,
         EntityManagerInterface $entityManager,
         SerializerInterface $serializer
         ): JsonResponse
     {
+        $requestArray = $request->toArray();
+
         try {
-            $json = $request->getContent();
-            $joueur = $serializer->deserialize(
-                $json,
-                'App\Entity\Joueurs',
-                "json"
-            );
+            // TODO: Re-modifier pour utiliser le deserializer en créant un Normalizer
+            if (!isset($requestArray["nom"]) || !isset($requestArray["prenom"])) {
+                return $this->renvoiJson(Response::HTTP_BAD_REQUEST, "Le nom ou prenom est manquant");
+            }
+
+            $joueur = new Joueurs();
+            $joueur->setNom($requestArray["nom"]);
+            $joueur->setPrenom($requestArray["prenom"]);
+            
+            // Un joueur n'a pas forcément une equipe
+            if (isset($requestArray["equipe"]) && gettype($requestArray["equipe"]) == "integer") {
+                $joueur->setEquipe(
+                    $equipeRepo->find($requestArray["equipe"])
+                );
+            }
+
         } catch (Exception $e) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => $e
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true
-            );
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
 
         $entityManager->persist($joueur);
@@ -133,71 +118,57 @@ class APIJoueursController extends AbstractController
 
 
         return new JsonResponse(
-            json([
-                "status" => "OK",
-                "details" => "Joueur créé avec succès"
-            ]),
-            Response::HTTP_OK,
+            $serializer->serialize($joueur, 'json', ['groups' => 'joueursMinimum']),
+            Response::HTTP_CREATED,
             [], true
         );
     }
 
 
     #[Route('', name: 'update_joueur', methods: ['PUT'])]
-    public function modify(
+    public function modifier(
         Request $request,
         EntityManagerInterface $em,
         JoueursRepository $joueurRepo,
+        EquipesRepository $equipeRepo,
         SerializerInterface $serializer
         ): JsonResponse
     {
         $json = json_decode($request->getContent(), true);
 
-        if (!isset($json['id'])) { return
-            new JsonResponse(
-                json_encode(["status" => "Bad Request", "details" => "Aucun id spécifié"]),
-                Response::HTTP_BAD_REQUEST,
-                [], true
-            );
+        if (!isset($json['id'])) {
+            return $this->renvoiJson(Response::HTTP_BAD_REQUEST, "Aucun id spécifié");
         }
 
         try {
             $joueur = $joueurRepo->find($json['id']);
         } catch (Exception $e) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => $e
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true
-            );
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
 
-        if ($joueur === null) { return
-            new JsonResponse(
-                json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
-                Response::HTTP_NOT_FOUND,
-                [], true
-            );
+        if ($joueur === null) {
+            return $this->renvoiJson(Response::HTTP_NOT_FOUND, "Joueur introuvable");
         }
 
         try {
-            $serializer->deserialize(
-                $request->getContent(),
-                'App\Entity\Joueurs',
-                "json",
-                [AbstractNormalizer::OBJECT_TO_POPULATE => $joueur]
-            );
+            // TODO: Re-modifier pour utiliser le deserializer en créant un Normalizer
+
+            if (isset($json["nom"]) && gettype($json["nom"]) == "string") {
+                $joueur->setNom($json["nom"]);
+            }
+
+            if (isset($json["prenom"]) && gettype($json["prenom"]) == "string") {
+                $joueur->setPrenom($json["prenom"]);
+            }
+
+            if (isset($json["equipe"]) && gettype($json["equipe"]) == "integer") {
+                $joueur->setEquipe(
+                    $equipeRepo->find($json["equipe"])
+                );
+            }
+
         } catch (Exception $e) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => $e
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true
-            );
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
 
         $em->persist($joueur);
@@ -208,4 +179,19 @@ class APIJoueursController extends AbstractController
 
         return new JsonResponse($joueurJson, Response::HTTP_OK, [], true);
     }
+
+
+    // Pour rendre le code plus propre
+    private function renvoiJson(int $statut, ?string $details): JsonResponse
+    {
+        return new JsonResponse(
+            json_encode([
+                "statut" => $statut,
+                "details" => $details
+            ]),
+            $statut,
+            [],
+            true
+        );
+    } 
 }
