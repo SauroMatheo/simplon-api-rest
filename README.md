@@ -4,10 +4,48 @@
 
 **URL**: /api/equipes
 
-### Récupérer toutes les équipes
+### Récupérer plusieurs équipes
 
 **Méthode**: GET
-**Paramètres**: Aucun
+**Paramètres**:
+`limite` (Integer, Facultatif): Détermine une limite de résultats
+`offset` (Integer, Facultatif): Un offset/décalage auquel commencer (va avec les limites)
+
+**Corps**: Aucun
+**Réponse**: Une liste de toutes les équipes, avec les informations minimales
+
+_(Exemple)_
+
+```JSON
+[
+	{
+		"id": 1,
+		"nom": "Les Grands Garçons"
+	},
+	{
+		"id": 2,
+		"nom": "Balopiers"
+	},
+	{
+		"id": 3,
+		"nom": "Les Meilleurs"
+	}
+]
+```
+
+_Note: Éventuellement, il pourrait y avoir une limite par défaut._
+
+#### Rechercher une/plusieurs équipes
+
+_Actif lorsque le nom ou score min/max est spécifié._
+**Méthode**: GET
+**Paramètres**:
+`nom` (String, Facultatif): Partie du nom à rechercher
+`scoreMin` (Integer, Facultatif): Score minimal de l'équipe
+`scoreMax` (Integer, Facultatif): Score maximal de l'équipe
+`limite` (Integer, Facultatif): Détermine une limite de résultats
+`offset` (Integer, Facultatif): Un offset/décalage auquel commencer (va avec les limites)
+
 **Corps**: Aucun
 **Réponse**: Une liste de toutes les équipes, avec les informations minimales
 
@@ -20,6 +58,34 @@
 
 **Corps**: Aucun
 **Réponse**: Renvoie les détails d'une équipe
+
+_(Exemple)_
+
+```JSON
+{
+	"id": 1,
+	"nom": "Les Grands Garçons",
+	"score": 12,
+	"joueurs": [
+		{
+			"id": 1
+		},
+		{
+			"id": 4
+		}
+	]
+}
+```
+
+### Récupérer des équipes (limite, offset/décalage)
+
+Automatiquement activé
+**Méthode**: GET
+**Paramètres**:
+
+- `limite` (Integer, Facultatif):
+  **Corps**: Aucun
+  **Réponse**: Une liste de toutes les équipes, avec les informations minimales
 
 ### Supprimer une équipe
 
@@ -97,6 +163,8 @@ _(Exemple)_
 	}
 ]
 ```
+
+_Note: Éventuellement, il faudra utiliser une limite par défaut._
 
 ### Récupérer un joueur
 
