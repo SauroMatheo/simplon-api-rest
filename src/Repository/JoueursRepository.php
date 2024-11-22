@@ -16,6 +16,8 @@ class JoueursRepository extends ServiceEntityRepository
         parent::__construct($registry, Joueurs::class);
     }
 
+    // TODO: Rajouter findLimit, calquer sur celui d'EquipesRepository
+
     // public function findById($id): ?Joueurs
     // {
     //     return $this->createQueryBuilder('j')

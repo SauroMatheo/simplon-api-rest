@@ -29,6 +29,7 @@ class APIJoueursController extends AbstractController
         SerializerInterface $serializer
         ): JsonResponse
     {
+        // TODO: Implémenter findLimit, potentiellement la recherche
         $id = $request->get('id');
 
         if (isset($id)) {
