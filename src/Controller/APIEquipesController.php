@@ -21,19 +21,19 @@ use App\Repository\EquipesRepository;
 class APIEquipesController extends AbstractController
 {
     #[Route('', name: 'get_equipes', methods: ['GET'])]
-    public function getEquipes(Request $request, EquipesRepository $equipesRepository, SerializerInterface $serializer): Response
+    public function getEquipes(
+        Request $request,
+        EquipesRepository $equipesRepository,
+        SerializerInterface $serializer
+        ): Response
     {
         (int) $id = $request->query->get('id');
 
         if (isset($id)) {
             $equipe = $equipesRepository->find($id);
 
-            if ($equipe === null) { return
-                new JsonResponse(
-                    json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
-                    Response::HTTP_NOT_FOUND,
-                    [], true
-                );
+            if ($equipe === null) {
+                return $this->renvoiJson(Response::HTTP_NOT_FOUND, "Équipe introuvable");
             }
 
             $equipesJson = $serializer->serialize($equipe, 'json', ['groups' => 'equipe']);
@@ -47,58 +47,35 @@ class APIEquipesController extends AbstractController
     }
 
     #[Route('', name: 'delete_equipe', methods: ['DELETE'])]
-    public function delete(Request $request, EntityManagerInterface $entityManager, EquipesRepository $equipesRepository): JsonResponse
+    public function delete(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        EquipesRepository $equipesRepository
+        ): JsonResponse
     {
-        if (!isset($id)) { return
-            new JsonResponse(
-                json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
-                Response::HTTP_NOT_FOUND,
-                [], true
-            );
+        if (!isset($id)) {
+            return $this->renvoiJson(Response::HTTP_NOT_FOUND, "Équipe introuvable");
         }
 
         try {
             (int) $id = $request->query->get('id');
             $equipe = $equipesRepository->find($id);
         } catch (Exception $e) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => $e
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true
-            );
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
 
-        if ($equipe === null) { return
-            new JsonResponse(
-                json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
-                Response::HTTP_NOT_FOUND,
-                [], true
-            );
+        if ($equipe === null) {
+            return $this->renvoiJson(Response::HTTP_NOT_FOUND, "Équipe introuvable");
         }
 
         $entityManager->remove($equipe);
         $entityManager->flush();
 
         if (null !== $equipesRepository->find($id)) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => "L'entité n'a pas pu être supprimée"
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true);
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, "L'équipe n'a pas pu être supprimée");
         }
 
-        return new JsonResponse(
-            json([
-                "status" => "No Content",
-                "details" => "L'entité a été supprimée"
-            ]),
-            Response::HTTP_NO_CONTENT,
-            [], true);
+        return $this->renvoiJson(Response::HTTP_NO_CONTENT, "L'équipe a été supprimée avec succès");
     }
 
 
@@ -113,28 +90,14 @@ class APIEquipesController extends AbstractController
             $json = $request->getContent();
             $equipe = $serializer->deserialize($json, 'App\Entity\Equipes', "json");
         } catch (Exception $e) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => $e
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true
-            );
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
 
         $entityManager->persist($equipe);
         $entityManager->flush();
 
 
-        return new JsonResponse(
-            json([
-                "status" => "OK",
-                "details" => "Équipe créée avec succès"
-            ]),
-            Response::HTTP_OK,
-            [], true
-        );
+        return $this->renvoiJson(Response::HTTP_CREATED, "Équipe créée avec succès");
     }
 
 
@@ -148,33 +111,18 @@ class APIEquipesController extends AbstractController
     {
         $json = json_decode($request->getContent(), true);
 
-        if (!isset($json['id'])) { return
-            new JsonResponse(
-                json_encode(["status" => "Bad Request", "details" => "Aucun id spécifié"]),
-                Response::HTTP_BAD_REQUEST,
-                [], true
-            );
+        if (!isset($json['id'])) {
+            return $this->renvoiJson(Response::HTTP_BAD_REQUEST, "Aucun id spécifié");
         }
 
         try {
             $equipe = $repo->find($json['id']);
         } catch (Exception $e) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => $e
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true
-            );
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
 
-        if ($equipe === null) { return
-            new JsonResponse(
-                json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
-                Response::HTTP_NOT_FOUND,
-                [], true
-            );
+        if ($equipe === null) {
+            return $this->renvoiJson(Response::HTTP_NOT_FOUND, "Équipe introuvable");
         }
 
         try {
@@ -185,14 +133,7 @@ class APIEquipesController extends AbstractController
                 [AbstractNormalizer::OBJECT_TO_POPULATE => $equipe]
             );
         } catch (Exception $e) {
-            return new JsonResponse(
-                json([
-                    "status" => "Internal Server Error",
-                    "details" => $e
-                ]),
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                [], true
-            );
+            return $this->renvoiJson(Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
 
         $em->persist($equipe);
@@ -203,4 +144,19 @@ class APIEquipesController extends AbstractController
 
         return new JsonResponse($equipeJson, Response::HTTP_OK, [], true);
     }
+
+
+    // Pour rendre le code plus propre
+    private function renvoiJson(int $statut, ?string $details): JsonResponse
+    {
+        return new JsonResponse(
+            json_encode([
+                "statut" => $statut,
+                "details" => $details
+            ]),
+            $statut,
+            [],
+            true
+        );
+    } 
 }
