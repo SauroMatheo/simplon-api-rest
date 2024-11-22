@@ -161,10 +161,17 @@ class APIJoueursController extends AbstractController
                 $joueur->setPrenom($json["prenom"]);
             }
 
-            if (isset($json["equipe"]) && gettype($json["equipe"]) == "integer") {
-                $joueur->setEquipe(
-                    $equipeRepo->find($json["equipe"])
-                );
+            if (isset($json["equipe"])) {
+                $idEquipe = $json["equipe"];
+
+                if (gettype($idEquipe) == "integer") {
+                    $equipe = $equipeRepo->find($idEquipe);
+
+                    if ($equipe !== null) { $joueur->setEquipe($equipe); }
+
+                } elseif ($idEquipe == "null") {
+                    $joueur->setEquipe(null);
+                }
             }
 
         } catch (Exception $e) {
