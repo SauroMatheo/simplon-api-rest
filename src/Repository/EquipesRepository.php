@@ -20,7 +20,7 @@ class EquipesRepository extends ServiceEntityRepository
     * Limite le nombre de résultats d'équipes.
     * @param int $limit
     * @param ?int $offset = 0
-    * @return Equipes[] Renvoie un array d'Equpes
+    * @return Equipes[] Renvoie un array d'Equipes
     */
     public function findLimit(
         int $limit,
@@ -43,7 +43,7 @@ class EquipesRepository extends ServiceEntityRepository
     * @param ?int       $scoreMax
     * @param ?int       $limit
     * @param ?int       $offset = 0
-    * @return Equipes[] Returns an array of Articles objects
+    * @return Equipes[] Returns an array of Equipes objects
     */
     public function findSearch(
         string $nom,
