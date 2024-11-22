@@ -77,6 +77,27 @@ _(Exemple)_
 **Corps**: Aucun
 **Réponse**: Une liste de tous les joueurs, avec les informations minimales
 
+_(Exemple)_
+
+```JSON
+[
+	{
+		"id": 1,
+		"nom": "Doe",
+		"prenom": "John",
+		"equipe": {
+			"id": 1
+		}
+	},
+	{
+		"id": 2,
+		"nom": "Valjean",
+		"prenom": "Jean",
+		"equipe": null
+	}
+]
+```
+
 ### Récupérer un joueur
 
 **Méthode**: GET
@@ -86,6 +107,19 @@ _(Exemple)_
 
 **Corps**: Aucun
 **Réponse**: Renvoie les détails d'un joueur
+
+_(Exemple)_
+
+```JSON
+{
+	"id": 1,
+	"nom": "Doe",
+	"prenom": "John",
+	"equipe": {
+		"id": 1
+	}
+}
+```
 
 ### Supprimer un joueur
 
