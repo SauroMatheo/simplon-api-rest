@@ -18,27 +18,37 @@ class EquipesRepository extends ServiceEntityRepository
 
     /**
     * Limite le nombre de résultats d'équipes.
-    * @param int $limit
+    * @param ?int $limite
     * @param ?int $offset = 0
     * @return Equipes[] Renvoie un array d'Equipes
     */
     public function findLimit(
-        int $limit,
+        ?int $limite, // TODO: Choisir une limite par défaut
         ?int $offset = 0
         ): array
     {
-        return $this->createQueryBuilder('e')
-            ->setMaxResults(max(1,$limit))
-            ->setFirstResult(max(0, $offset))
+        $query = $this->createQueryBuilder('e');
+
+        if (!isset($offset)) { $offset = 0; }
+
+        if (isset($limite)) {
+            $query = $query
+            ->setMaxResults(max(1, $limite)) // TODO: Choisir une limite max
+            ;
+        }
+
+        $query = $query->setFirstResult(max(0, $offset));
+
+        return $query
             ->getQuery()
             ->getResult()
-        ;
+            ;
     }
 
     /**
     * Permet de rechercher des équipes en fonction de leur nom et/ou score minimal/maximal.
     * Lorsqu'un paramètre est vide, il n'est pas pris en compte, pour faciliter l'utilisation.
-    * @param string     $nom
+    * @param ?string     $nom
     * @param ?int       $scoreMin
     * @param ?int       $scoreMax
     * @param ?int       $limit
@@ -46,7 +56,7 @@ class EquipesRepository extends ServiceEntityRepository
     * @return Equipes[] Returns an array of Equipes objects
     */
     public function findSearch(
-        string $nom,
+        ?string $nom,
         ?int $scoreMin,
         ?int $scoreMax,
         ?int $limit,
@@ -55,28 +65,30 @@ class EquipesRepository extends ServiceEntityRepository
     {
         $query = $this->createQueryBuilder('e');
 
-        if (!empty($nom)) {
+        if (isset($nom)) {
             $query = $query
             ->andWhere('e.nom LIKE :nom')
-            ->setParameter('nom', '%'.$nom.'%');
+            ->setParameter('nom', '%'.$nom.'%'); // TODO: oblige un caractère avant et après
         }
 
-        if (!empty($scoreMin)) {
+        if (isset($scoreMin)) {
             $query = $query
             ->andWhere('e.score >= :scoreMin')
             ->setParameter('scoreMin', $scoreMin);
         }
 
-        if (!empty($scoreMax)) {
+        if (isset($scoreMax)) {
             $query = $query
             ->andWhere('e.score <= :scoreMax')
             ->setParameter('scoreMax', $scoreMax);
         }        
         
-        if (!empty($limit)) {
+        if (isset($limit)) {
             $query = $query
             ->setMaxResults(max(1,$limit));
         }
+        
+        if (!isset($offset)) { $offset = 0; }
 
         $query = $query->setFirstResult(max(0, $offset));
 

@@ -27,8 +27,9 @@ class APIEquipesController extends AbstractController
         SerializerInterface $serializer
         ): Response
     {
-        (int) $id = $request->query->get('id');
+        (int) $id = $request->get('id');
 
+        // ID Connu: Récupération
         if (isset($id)) {
             $equipe = $equipesRepository->find($id);
 
@@ -38,10 +39,33 @@ class APIEquipesController extends AbstractController
 
             $equipesJson = $serializer->serialize($equipe, 'json', ['groups' => 'equipe']);
 
-        } else {
-            $equipes = $equipesRepository->findAll();
-            $equipesJson = $serializer->serialize($equipes, 'json', ['groups' => 'equipesMinimum']);
+            return new JsonResponse($equipesJson, Response::HTTP_OK, [], true);
         }
+        
+        $nom = $request->get('nom');
+        (int) $scoreMin = $request->get('scoreMin');
+        (int) $scoreMax = $request->get('scoreMax');
+        (int) $limite = $request->get('limite');
+        (int) $offset = $request->get('offset');
+
+        // Nom/Score en paramètres: Recherche
+        if (isset($nom) || isset($scoreMin) || isset($scoreMax)) {
+            $equipes = $equipesRepository->findSearch($nom, $scoreMin, $scoreMax, $limite, $offset);
+            $equipesJson = $serializer->serialize($equipes, 'json', ['groups' => 'equipesMinimum']);
+
+            return new JsonResponse($equipesJson, Response::HTTP_OK, [], true);
+        }
+
+        // Limite précisée: Limitation des résultats
+        if (isset($limite) || isset($offset)) {
+            $equipes = $equipesRepository->findLimit($limite, $offset);
+            $equipesJson = $serializer->serialize($equipes, 'json', ['groups' => 'equipesMinimum']);
+
+            return new JsonResponse($equipesJson, Response::HTTP_OK, [], true);
+        }
+
+        $equipes = $equipesRepository->findAll(); // TODO: Utiliser ->findLimit, choisir une limite par défaut
+        $equipesJson = $serializer->serialize($equipes, 'json', ['groups' => 'equipesMinimum']);
 
         return new JsonResponse($equipesJson, Response::HTTP_OK, [], true);
     }
