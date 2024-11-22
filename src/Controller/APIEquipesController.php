@@ -16,33 +16,25 @@ use Doctrine\ORM\EntityManagerInterface;
 
 use App\Repository\EquipesRepository;
 
-use App\Entity\Equipes;
-
-// Réponses Json d'Erreur
-define("ERR_ID_INTROUVABLE", new JsonResponse(
-    json(["status" => "Bad Request", "details" => "Aucun id spécifié"]),
-    Response::HTTP_BAD_REQUEST,
-    [], true
-));
-
-define("ERR_ENTITE_INTROUVABLE", new JsonResponse(
-    json(["status" => "Not Found", "details" => "Entité introuvable"]),
-    Response::HTTP_NOT_FOUND,
-    [], true
-));
-
 
 #[Route('/api/equipes')]
 class APIEquipesController extends AbstractController
 {
-    #[Route('', name: 'api_get', methods: ['GET'])]
-    public function getEquipeId(Request $request, EquipesRepository $equipesRepository, SerializerInterface $serializer): Response
+    #[Route('', name: 'get_equipes', methods: ['GET'])]
+    public function getEquipes(Request $request, EquipesRepository $equipesRepository, SerializerInterface $serializer): Response
     {
+        (int) $id = $request->query->get('id');
+
         if (isset($id)) {
-            (int) $id = $request->query->get('id');
             $equipe = $equipesRepository->find($id);
 
-            if ($equipe === null) { return ERR_ENTITE_INTROUVABLE; }
+            if ($equipe === null) { return
+                new JsonResponse(
+                    json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
+                    Response::HTTP_NOT_FOUND,
+                    [], true
+                );
+            }
 
             $equipesJson = $serializer->serialize($equipe, 'json', ['groups' => 'equipe']);
 
@@ -57,7 +49,13 @@ class APIEquipesController extends AbstractController
     #[Route('', name: 'delete_equipe', methods: ['DELETE'])]
     public function delete(Request $request, EntityManagerInterface $entityManager, EquipesRepository $equipesRepository): JsonResponse
     {
-        if (!isset($id)) { return ERR_ID_INTROUVABLE; }
+        if (!isset($id)) { return
+            new JsonResponse(
+                json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
+                Response::HTTP_NOT_FOUND,
+                [], true
+            );
+        }
 
         try {
             (int) $id = $request->query->get('id');
@@ -73,7 +71,13 @@ class APIEquipesController extends AbstractController
             );
         }
 
-        if ($equipe === null) { return ERR_ENTITE_INTROUVABLE; }
+        if ($equipe === null) { return
+            new JsonResponse(
+                json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
+                Response::HTTP_NOT_FOUND,
+                [], true
+            );
+        }
 
         $entityManager->remove($equipe);
         $entityManager->flush();
@@ -102,7 +106,6 @@ class APIEquipesController extends AbstractController
     public function add(
         Request $request,
         EntityManagerInterface $entityManager,
-        EquipesRepository $equipesRepository,
         SerializerInterface $serializer
         ): JsonResponse
     {
@@ -127,7 +130,7 @@ class APIEquipesController extends AbstractController
         return new JsonResponse(
             json([
                 "status" => "OK",
-                "details" => "Entitée créée avec succès"
+                "details" => "Équipe créée avec succès"
             ]),
             Response::HTTP_OK,
             [], true
@@ -145,7 +148,13 @@ class APIEquipesController extends AbstractController
     {
         $json = json_decode($request->getContent(), true);
 
-        if (!isset($json['id'])) { return ERR_ID_INTROUVABLE; }
+        if (!isset($json['id'])) { return
+            new JsonResponse(
+                json_encode(["status" => "Bad Request", "details" => "Aucun id spécifié"]),
+                Response::HTTP_BAD_REQUEST,
+                [], true
+            );
+        }
 
         try {
             $equipe = $repo->find($json['id']);
@@ -160,7 +169,13 @@ class APIEquipesController extends AbstractController
             );
         }
 
-        if ($equipe === null) { return ERR_ENTITE_INTROUVABLE; }
+        if ($equipe === null) { return
+            new JsonResponse(
+                json_encode(["status" => "Not Found", "details" => "Entité introuvable"]),
+                Response::HTTP_NOT_FOUND,
+                [], true
+            );
+        }
 
         try {
             $serializer->deserialize(
